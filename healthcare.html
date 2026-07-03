@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chanda Rural Health Portal</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=Eczar:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Work Sans', sans-serif; background-color: #f9fafb; }
+    h1, h2, h3 { font-family: 'Eczar', serif; }
+    .tab-btn.active { border-color: #d97706; color: #d97706; background: #fffbeb; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .baby-tile { position: relative; border-radius: 16px; overflow: hidden; cursor: pointer; aspect-ratio: 4/3; }
+    .baby-tile img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+    .baby-tile:hover img { transform: scale(1.08); }
+    .baby-tile .tile-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 100%); display: flex; align-items: flex-end; padding: 1.25rem; }
+    .baby-tile .tile-title { color: #fff; font-family: 'Eczar', serif; font-size: 1.15rem; font-weight: 600; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+    .detail-overlay { position: fixed; inset: 0; z-index: 50; background: #fff; overflow-y: auto; animation: slideUp 0.35s ease; }
+    @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .baby-tile { animation: fadeInUp 0.5s ease both; }
+    .scheme-link { transition: transform 0.2s ease, box-shadow 0.2s ease; background-color: white;}
+    .scheme-link:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .canva-button { background-color: #d97706; color: white; transition: background-color 0.2s; }
+    .canva-button:hover { background-color: #b45309; }
+
+    /* Newborn detail: per-point image containers */
+    .info-card {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      padding: 1.1rem 1.1rem;
+      min-height: 140px;
+    }
+    .info-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: var(--bg);
+      background-size: cover;
+      background-position: center;
+      transform: scale(1.06);
+      filter: saturate(1.05);
+    }
+    .info-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.72), rgba(0,0,0,0.28));
+    }
+    .info-card > * { position: relative; z-index: 1; }
+    .info-card h3 {
+      margin: 0;
+      font-family: 'Eczar', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.98);
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .info-card p, .info-card li {
+      color: rgba(255,255,255,0.92);
+      margin-top: .55rem;
+      line-height: 1.55;
+    }
+    .info-card ul, .info-card ol { margin-top: .5rem; padding-left: 1.25rem; }
+    .info-card strong { color: rgba(255,255,255,0.98); }
+
+    .detail-subtitle {
+      font-family: 'Work Sans', sans-serif;
+      color: #4b5563;
+    }
+  </style>
+ </head>
+ <body class="min-h-screen w-full">
+  <header class="relative overflow-hidden">
+    <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80" alt="Hospital Building" class="w-full h-64 object-cover" loading="lazy">
+   <div class="absolute inset-0 bg-gradient-to-b from-black/60 to-black/30 flex items-center justify-center">
+    <div class="text-center px-4">
+     <h1 class="text-4xl md:text-5xl text-white drop-shadow-lg font-bold">Chanda Healthcare</h1>
+     <p class="text-lg md:text-xl text-white/90 mt-2">Empowering Rural Communities with Accessible Health Services</p>
+    </div>
+   </div>
+  </header>
+  <nav class="sticky top-0 z-10 bg-white border-b shadow-sm">
+   <div class="max-w-5xl mx-auto flex overflow-x-auto">
+        <button class="tab-btn active flex-1 px-4 py-3 border-b-3 border-transparent font-medium text-sm flex items-center justify-center gap-2" data-tab="elderly">
+            <i data-lucide="heart-pulse" class="w-4 h-4"></i><span>Elderly Care</span>
+        </button>
+        <button class="tab-btn flex-1 px-4 py-3 border-b-3 border-transparent font-medium text-sm flex items-center justify-center gap-2" data-tab="pediatric">
+            <i data-lucide="baby" class="w-4 h-4"></i><span>Newborn Care</span>
+        </button>
+        <button class="tab-btn flex-1 px-4 py-3 border-b-3 border-transparent font-medium text-sm flex items-center justify-center gap-2" data-tab="schemes">
+            <i data-lucide="file-badge" class="w-4 h-4"></i><span>Govt Schemes</span>
+        </button>
+   </div>
+  </nav>
+  <main class="max-w-5xl mx-auto p-4 md:p-8">
+    <section class="tab-content active" id="tab-elderly">
+    <div class="grid md:grid-cols-2 gap-6">
+     <div>
+      <img src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80" alt="Elderly Care" class="w-full h-48 object-cover rounded-xl shadow-md" loading="lazy">
+     </div>
+     <div class="flex flex-col justify-center">
+      <h2 class="text-2xl text-gray-800 font-bold mb-2">Dedicated Senior Health Services</h2>
+      <p class="text-gray-600 mb-4">Ensuring our elders receive prompt medical attention, regular checkups, and comfortable transport to healthcare facilities directly from their village.</p>
+     </div>
+    </div>
+    <div class="grid md:grid-cols-2 gap-6 mt-6">
+     <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+      <h3 class="text-xl text-gray-800 font-bold mb-4">Book Clinical Appointment</h3>
+      <form id="appointment-form" class="space-y-3">
+        <label for="patient-name" class="block text-sm font-medium text-gray-700">Patient Full Name</label>
+        <input id="patient-name" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none" required placeholder="e.g. Tukaram Patil">
+        <label for="village" class="block text-sm font-medium text-gray-700 mt-2">Village Name</label>
+        <input id="village" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none" required placeholder="e.g. Chanda">
+        <label for="appt-date" class="block text-sm font-medium text-gray-700 mt-2">Preferred Date</label>
+        <input id="appt-date" type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none" required>
+        <button type="submit" class="canva-button w-full py-2 rounded-lg font-semibold mt-4 shadow-sm">Confirm Appointment</button>
+      </form>
+      <p id="appt-success" class="hidden mt-3 text-green-700 bg-green-50 p-2 rounded text-sm font-medium">✓ Appointment request submitted securely!</p>
+     </div>
+     <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+      <h3 class="text-xl text-gray-800 font-bold mb-4">Request Health Cab (Ambulance)</h3>
+      <form id="cab-form" class="space-y-3">
+        <label for="pickup-display" class="block text-sm font-medium text-gray-700">Pickup Location (GPS Required)</label>
+       <div class="flex gap-2">
+        <input id="pickup-display" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 focus:outline-none" readonly placeholder="Detecting location...">
+        <button type="button" id="detect-loc-btn" class="px-3 py-2 bg-amber-100 rounded-lg hover:bg-amber-200 transition shadow-sm border border-amber-200" title="Detect my location"><i data-lucide="map-pin" class="w-5 h-5 text-amber-700"></i></button>
+       </div>
+       <p id="loc-status" class="text-xs text-gray-500 hidden"></p>
+       <label for="cab-date" class="block text-sm font-medium text-gray-700 mt-2">Time of Pickup</label>
+       <input id="cab-date" type="datetime-local" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none" required>
+       <button type="submit" class="canva-button w-full py-2 rounded-lg font-semibold mt-4 shadow-sm">Dispatch Vehicle</button>
+      </form>
+      <p id="cab-success" class="hidden mt-3 text-green-700 bg-green-50 p-2 rounded text-sm font-medium">✓ Health cab dispatched! You will receive a driver call shortly.</p>
+     </div>
+    </div>
+   </section>
+
+   <section class="tab-content" id="tab-pediatric">
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+     <div>
+      <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=800&q=80" alt="Newborn Care" class="w-full h-48 object-cover rounded-xl shadow-md" loading="lazy">
+     </div>
+     <div class="flex flex-col justify-center">
+      <h2 class="text-2xl text-gray-800 font-bold mb-2">Newborn & Maternal Guidance</h2>
+      <p class="text-gray-600">Essential, medically accurate guidance for the crucial first months of your baby's life. Click any topic below for detailed instructions.</p>
+     </div>
+    </div>
+
+    <div id="baby-tiles-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+     <div class="baby-tile" style="animation-delay:0ms" onclick="openBabyDetail('feeding')">
+        <img referrerpolicy="no-referrer" src="https://kjkhospital.com/wp-content/uploads/2018/11/Breast_Feeding-960x666-1.jpg" alt="Feeding" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">🍼 Feeding</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:80ms" onclick="openBabyDetail('sleep')">
+        <img referrerpolicy="no-referrer" src="https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=400&q=80" alt="Sleep" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">😴 Sleep</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:160ms" onclick="openBabyDetail('hygiene')">
+        <img referrerpolicy="no-referrer" src="https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=400&q=80" alt="Hygiene" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">🧼 Hygiene</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:240ms" onclick="openBabyDetail('vaccine')">
+        <img referrerpolicy="no-referrer" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlZgGupHgs-g5gj0WfJScKb3Ff-lwTZDCEcYDDXPOyhg&s=10" alt="Vaccine" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">💉 Vaccines</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:320ms" onclick="openBabyDetail('signs')">
+        <img referrerpolicy="no-referrer" src="https://images.unsplash.com/photo-1584516150909-c43483ee7932?auto=format&fit=crop&w=400&q=80" alt="Danger Signs" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">⚠️ Danger Signs</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:400ms" onclick="openBabyDetail('bonding')">
+        <img referrerpolicy="no-referrer" src="https://raisingchildren.net.au/__data/assets/image/0032/47939/attachment.jpg" alt="Bonding" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">🤱 Bonding</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:480ms" onclick="openBabyDetail('bathing')">
+        <img referrerpolicy="no-referrer" src="https://mommybites.com/wp-content/uploads/2019/01/baby-bath.jpg" alt="Bathing" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">🛁 Bathing</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:560ms" onclick="openBabyDetail('diaper')">
+        <img referrerpolicy="no-referrer" src="https://mamaearth.in/blog/wp-content/uploads/2022/07/Baby-Diaper.jpg" alt="Diapering" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">🧷 Diapering</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:640ms" onclick="openBabyDetail('illness')">
+        <img referrerpolicy="no-referrer" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMoEuKfLAYSwidnPUwO5Xgs9PFLVCa8O2zi0iupbOr4vXsMKomWsjCnA4&s=10" alt="Illness" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">🏥 Illnesses</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:720ms" onclick="openBabyDetail('safety')">
+        <img referrerpolicy="no-referrer" src="https://m.media-amazon.com/images/I/51AOaluYI6L._AC_UF894,1000_QL80_.jpg" alt="Safety" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">🛡️ Safety</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:800ms" onclick="openBabyDetail('growth')">
+        <img referrerpolicy="no-referrer" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTV2sMxBdn1hPaBanA4oZr2JUYhqmMTva6OBGIgHmIP_R7Gv4r78QwMc70g&s=10" alt="Growth" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">📈 Growth</span></div>
+     </div>
+     <div class="baby-tile" style="animation-delay:880ms" onclick="openBabyDetail('clothing')">
+        <img referrerpolicy="no-referrer" src="https://cdn.shopify.com/s/files/1/1604/3829/files/EmptyName-64.jpg?5575248346275481420" alt="Clothing" loading="lazy">
+      <div class="tile-overlay"><span class="tile-title">👕 Clothing</span></div>
+     </div>
+    </div>
+   </section>
+
+   <section class="tab-content" id="tab-schemes">
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+     <div>
+      <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=800&q=80" alt="Govt Schemes" class="w-full h-48 object-cover rounded-xl shadow-md" loading="lazy">
+     </div>
+     <div class="flex flex-col justify-center">
+      <h2 class="text-2xl text-gray-800 font-bold mb-2">Government Healthcare Schemes</h2>
+      <p class="text-gray-600">Register directly for financial assistance and health coverage through these official state and national portals. Click any card to apply.</p>
+     </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+        <a href="https://abdm.gov.in/" target="_blank" rel="noopener noreferrer" class="scheme-link p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-amber-500 block no-underline">
+            <h3 class="text-lg text-gray-900 font-bold">Ayushman Bharat (PM-JAY)</h3>
+            <p class="text-gray-600 mt-1 text-sm">Health cover of up to ₹5 lakhs per family per year for secondary and tertiary care.</p>
+            <p class="text-xs text-amber-700 mt-2 bg-amber-50 inline-block px-2 py-1 rounded border border-amber-100">BPL / Low Income Families</p>
+        </a>
+
+        <a href="https://www.jeevandayee.gov.in/MJPJAY/FrontServlet?requestType=CommonRH&actionVal=RightFrame&page=undefined%3E%3E%3Cb%3EMJPJAY%20Login%3C/b%3E&pageName=MJPJAY_Login&mainMenu=MJPJAY_Login&subMenu=MJPJAY_Login" target="_blank" rel="noopener noreferrer" class="scheme-link p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-green-500 block no-underline">
+            <h3 class="text-lg text-gray-900 font-bold">MJPJAY Maharashtra</h3>
+            <p class="text-gray-600 mt-1 text-sm">State assurance scheme providing cashless medical treatment for major surgeries and diseases.</p>
+            <p class="text-xs text-green-700 mt-2 bg-green-50 inline-block px-2 py-1 rounded border border-green-100">Ration Card Holders in MH</p>
+        </a>
+
+        <a href="https://nhm.gov.in/index1.php%3Flang%3D1%26level%3D3%26lid%3D309%26sublinkid%3D841" target="_blank" rel="noopener noreferrer" class="scheme-link p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-blue-500 block no-underline">
+            <h3 class="text-lg text-gray-900 font-bold">Janani Suraksha Yojana (JSY)</h3>
+            <p class="text-gray-600 mt-1 text-sm">Safe motherhood intervention promoting institutional delivery with cash assistance.</p>
+            <p class="text-xs text-blue-700 mt-2 bg-blue-50 inline-block px-2 py-1 rounded border border-blue-100">Pregnant Women</p>
+        </a>
+
+        <a href="https://rbsk.mohfw.gov.in/" target="_blank" rel="noopener noreferrer" class="scheme-link p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-purple-500 block no-underline">
+            <h3 class="text-lg text-gray-900 font-bold">Rashtriya Bal Swasthya (RBSK)</h3>
+            <p class="text-gray-600 mt-1 text-sm">Early identification and intervention for children from birth to 18 years for defects and diseases.</p>
+            <p class="text-xs text-purple-700 mt-2 bg-purple-50 inline-block px-2 py-1 rounded border border-purple-100">Children (0-18 Years)</p>
+        </a>
+
+        <a href="https://pmssy.mohfw.gov.in/" target="_blank" rel="noopener noreferrer" class="scheme-link p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-rose-500 block no-underline">
+            <h3 class="text-lg text-gray-900 font-bold">Pradhan Mantri Surakshit Matritva</h3>
+            <p class="text-gray-600 mt-1 text-sm">Guaranteed, comprehensive, and quality antenatal care free of cost on the 9th of every month.</p>
+            <p class="text-xs text-rose-700 mt-2 bg-rose-50 inline-block px-2 py-1 rounded border border-rose-100">Pregnant Women (2nd/3rd Trimester)</p>
+        </a>
+
+        <a href="https://pmmvy.wcd.gov.in/?4iyd55Huu=WIoAKxpkDMcx" target="_blank" rel="noopener noreferrer" class="scheme-link p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-indigo-500 block no-underline">
+            <h3 class="text-lg text-gray-900 font-bold">Matru Vandana Yojana (PMMVY)</h3>
+            <p class="text-gray-600 mt-1 text-sm">Maternity benefit program providing conditional cash transfer for the first living child.</p>
+            <p class="text-xs text-indigo-700 mt-2 bg-indigo-50 inline-block px-2 py-1 rounded border border-indigo-100">First-Time Mothers</p>
+        </a>
+    </div>
+   </section>
+  </main>
+
+  <div id="baby-detail-overlay" class="detail-overlay hidden">
+   <div class="relative">
+    <div id="detail-hero" class="w-full h-56 md:h-72 bg-cover bg-center relative">
+     <div class="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70 flex items-end p-6">
+      <div>
+        <h2 id="detail-title" class="text-white text-2xl md:text-3xl font-bold" style="font-family:'Eczar',serif"></h2>
+        <p id="detail-subtitle" class="detail-subtitle text-white/85 mt-1 text-sm md:text-base">Quick, clear steps with one tip per image card.</p>
+      </div>
+     </div>
+     <button onclick="closeBabyDetail()" class="absolute top-4 left-4 bg-white/90 rounded-full p-2 shadow-lg hover:bg-white transition cursor-pointer z-10"><i data-lucide="arrow-left" class="w-5 h-5 text-gray-800"></i></button>
+    </div>
+    <div id="detail-body" class="max-w-4xl mx-auto p-6 md:p-10">
+     <div id="detail-content" class="space-y-4"></div>
+     <p class="text-xs text-gray-500 mt-6">This information is for general guidance. If your baby looks unwell or you are worried, visit a doctor or call 108.</p>
+    </div>
+   </div>
+  </div>
+
+  <footer class="mt-12 p-6 text-center border-t bg-white">
+   <p class="text-gray-500 text-sm">© 2026 Chanda Healthcare. Created for the community.</p>
+   <p class="text-red-600 text-sm font-bold mt-2"><i data-lucide="phone-call" class="inline w-4 h-4 mr-1"></i> Medical Emergency: Call 108 immediately</p>
+  </footer>
+
+  <script>
+    // Initialize standard icons
+    lucide.createIcons();
+
+    // Tab switching logic
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Topic images (also used for card backgrounds)
+    const topicImages = {
+      feeding: "https://kjkhospital.com/wp-content/uploads/2018/11/Breast_Feeding-960x666-1.jpg",
+      vaccine: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlZgGupHgs-g5gj0WfJScKb3Ff-lwTZDCEcYDDXPOyhg&s=10",
+      bonding: "https://raisingchildren.net.au/__data/assets/image/0032/47939/attachment.jpg",
+      bathing: "https://mommybites.com/wp-content/uploads/2019/01/baby-bath.jpg",
+      diaper: "https://mamaearth.in/blog/wp-content/uploads/2022/07/Baby-Diaper.jpg",
+      illness: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMoEuKfLAYSwidnPUwO5Xgs9PFLVCa8O2zi0iupbOr4vXsMKomWsjCnA4&s=10",
+      safety: "https://m.media-amazon.com/images/I/51AOaluYI6L._AC_UF894,1000_QL80_.jpg",
+      growth: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTV2sMxBdn1hPaBanA4oZr2JUYhqmMTva6OBGIgHmIP_R7Gv4r78QwMc70g&s=10",
+      clothing: "https://cdn.shopify.com/s/files/1/1604/3829/files/EmptyName-64.jpg?5575248346275481420"
+    };
+
+    // Helper: build per-point image cards (each point is its own container + background image)
+    function buildCards(bgUrl, cards) {
+      const safeBg = (bgUrl || "").replaceAll("'", "\\'");
+      const html = cards.map(c => `
+        <div class="info-card shadow-md" style="--bg:url('${safeBg}')">
+          <h3>${c.title}</h3>
+          ${c.html}
+        </div>
+      `).join("");
+      return `<div class="grid md:grid-cols-2 gap-4">${html}</div>`;
+    }
+
+    // Baby care detail data (rich, card-based content)
+    const babyData = {
+      feeding: {
+        title: "🍼 Feeding & Breastfeeding",
+        subtitle: "Breast milk is the best food for most babies in the first 6 months.",
+        content: (bg) => buildCards(bg, [
+          { title: "Start early", html: `<p>Try to start breastfeeding within <strong>1 hour</strong> of birth. The first milk (colostrum) is protective for the baby.</p>` },
+          { title: "Feed on demand", html: `<p>Most newborns feed <strong>8–12 times</strong> in 24 hours. Look for cues: turning head, sucking fingers, lip smacking.</p>` },
+          { title: "Good latch", html: `<p>Baby’s mouth should cover more of the dark area around the nipple. If you feel sharp pain, gently break suction and try again.</p>` },
+          { title: "Is baby getting enough?", html: `<p>After day 4, aim for about <strong>6+ wet diapers</strong> in 24 hours and a baby who wakes for feeds and seems satisfied.</p>` },
+          { title: "Burping & comfort", html: `<p>Burp after feeds. Keep baby upright for 10–20 minutes to reduce spit-ups and gas.</p>` },
+          { title: "Formula safety (if used)", html: `<p>Use clean water, follow the tin instructions, and keep bottles/nipples clean. Discard leftover formula; don’t reuse.</p>` }
+        ])
+      },
+      sleep: {
+        title: "😴 Sleep & Safe Sleeping",
+        subtitle: "Simple rules can reduce the risk of sleep-related accidents.",
+        content: (bg) => buildCards(bg, [
+          { title: "Normal sleep pattern", html: `<p>Newborns can sleep <strong>14–17 hours</strong> a day in short naps. Waking often for feeding is normal.</p>` },
+          { title: "Back to sleep", html: `<p>Always place baby on their <strong>back</strong> for naps and night sleep.</p>` },
+          { title: "Firm, flat surface", html: `<p>Use a firm mattress. Avoid soft bedding, pillows, stuffed toys, and loose blankets.</p>` },
+          { title: "Room sharing", html: `<p>Keep baby in the same room (but separate sleep surface) for the first months for easier feeding and monitoring.</p>` },
+          { title: "Temperature", html: `<p>Dress baby in one extra light layer. Check chest/back for warmth; hands and feet may feel cool.</p>` },
+          { title: "Swaddling safely", html: `<p>If swaddling, keep it loose at hips and stop once baby shows signs of rolling.</p>` }
+        ])
+      },
+      hygiene: {
+        title: "🧼 Hygiene & Umbilical Care",
+        subtitle: "Clean, dry care helps prevent infection.",
+        content: (bg) => buildCards(bg, [
+          { title: "Cord stump care", html: `<p>Keep the cord stump <strong>clean and dry</strong>. It usually falls off in 1–3 weeks. Avoid applying oil, powder, or home remedies.</p>` },
+          { title: "Diaper placement", html: `<p>Fold the diaper below the stump so air reaches it and urine doesn’t soak it.</p>` },
+          { title: "Handwashing", html: `<p>Wash hands with soap before feeding and after diaper changes. Ask visitors to do the same.</p>` },
+          { title: "Daily cleaning", html: `<p>Gently clean face, neck folds, behind ears, and diaper area daily with warm water and a soft cloth.</p>` },
+          { title: "Nails & skin", html: `<p>Trim nails when baby is sleepy. Use mild, fragrance-free products to reduce irritation.</p>` },
+          { title: "Clothes", html: `<p>Wash new clothes before first use using mild detergent. Avoid strong perfumes on baby.</p>` }
+        ])
+      },
+      vaccine: {
+        title: "💉 Vaccination Schedule (India)",
+        subtitle: "Keep the immunization card safely and bring it to every visit.",
+        content: (bg) => buildCards(bg, [
+          { title: "At birth", html: `<ul class="list-disc"><li>BCG</li><li>OPV-0</li><li>Hepatitis B (birth dose)</li></ul>` },
+          { title: "6 weeks", html: `<ul class="list-disc"><li>Pentavalent / DPT-1 (as advised)</li><li>IPV-1</li><li>Rotavirus-1</li><li>PCV-1</li></ul>` },
+          { title: "10 weeks", html: `<ul class="list-disc"><li>Pentavalent / DPT-2</li><li>IPV-2</li><li>Rotavirus-2</li></ul>` },
+          { title: "14 weeks", html: `<ul class="list-disc"><li>Pentavalent / DPT-3</li><li>IPV-3</li><li>Rotavirus-3</li><li>PCV-2</li></ul>` },
+          { title: "9 months", html: `<ul class="list-disc"><li>MR (Measles-Rubella) 1st dose</li><li>Vitamin A 1st dose</li></ul>` },
+          { title: "Where to get vaccines", html: `<p>Visit your nearest <strong>PHC / Anganwadi</strong> for free vaccines under the Universal Immunization Programme. Ask staff if your child is due.</p>` }
+        ])
+      },
+      signs: {
+        title: "⚠️ Danger Signs — Rush to Hospital",
+        subtitle: "If you see these signs, don’t wait at home.",
+        content: (bg) => buildCards(bg, [
+          { title: "Not feeding / very sleepy", html: `<p>Baby refuses feeds, cannot suck, or is unusually sleepy and difficult to wake.</p>` },
+          { title: "Breathing trouble", html: `<p>Fast breathing, grunting, chest pulling in, or bluish lips.</p>` },
+          { title: "Fever or very cold", html: `<p>Temperature <strong>≥ 38°C (100.4°F)</strong> in a young baby needs medical advice quickly.</p>` },
+          { title: "Severe jaundice", html: `<p>Yellow skin spreading to arms/legs, or baby is very sleepy with yellow eyes.</p>` },
+          { title: "Vomiting green / blood in stool", html: `<p>Green vomit, blood in stool, repeated vomiting, or signs of dehydration (very few wet diapers).</p>` },
+          { title: "Emergency help", html: `<p><strong>Call 108</strong> for ambulance. If unsure, visit the nearest hospital/PHC immediately.</p>` }
+        ])
+      },
+      bonding: {
+        title: "🤱 Bonding & Skin-to-Skin Contact",
+        subtitle: "Bonding supports feeding, growth, and calm sleep.",
+        content: (bg) => buildCards(bg, [
+          { title: "Skin-to-skin (KMC)", html: `<p>Hold baby on your bare chest (skin-to-skin) for at least <strong>60 minutes</strong> daily when possible.</p>` },
+          { title: "Why it helps", html: `<p>It helps regulate baby’s temperature and breathing, supports breastfeeding, and reduces stress.</p>` },
+          { title: "Talk and respond", html: `<p>Talk, sing, and make eye contact. Respond quickly to crying; newborns cannot be “spoiled”.</p>` },
+          { title: "Father involvement", html: `<p>Fathers and caregivers can also do skin-to-skin to support bonding and help mother rest.</p>` },
+          { title: "Gentle touch", html: `<p>Use gentle massage and soft stroking when baby is calm; stop if baby seems overstimulated.</p>` },
+          { title: "Safe carrying", html: `<p>Always support head and neck. Keep baby’s airway clear when using wraps/slings.</p>` }
+        ])
+      },
+      bathing: {
+        title: "🛁 Bathing Your Newborn",
+        subtitle: "Warm, quick baths are best; safety first.",
+        content: (bg) => buildCards(bg, [
+          { title: "Before cord falls off", html: `<p>Give sponge baths only. Keep the cord stump dry.</p>` },
+          { title: "How often", html: `<p>2–3 baths per week is enough. Clean face, neck folds, and diaper area daily.</p>` },
+          { title: "Water temperature", html: `<p>Use lukewarm water. Test with your elbow; it should feel warm, not hot.</p>` },
+          { title: "Bath steps", html: `<p>Gather towel, clean clothes, mild soap first. Support head/neck and wash from cleanest to dirtiest areas.</p>` },
+          { title: "After the bath", html: `<p>Dry well in skin folds and dress quickly to prevent chilling. Use moisturizer only if skin is dry.</p>` },
+          { title: "Never leave baby", html: `<p><strong>Never</strong> leave baby alone near water, not even for a second.</p>` }
+        ])
+      },
+      diaper: {
+        title: "🧷 Diapering & Rash Prevention",
+        subtitle: "Frequent changes keep baby comfortable and reduce rash.",
+        content: (bg) => buildCards(bg, [
+          { title: "How often to change", html: `<p>Change every 2–3 hours or immediately when soiled. Newborns may need 10–12 changes/day.</p>` },
+          { title: "Clean correctly", html: `<p>Wipe <strong>front to back</strong> (especially for girls). Use water/cotton or mild wipes.</p>` },
+          { title: "Air-dry the skin", html: `<p>Let the area dry fully before closing a new diaper. Short diaper-free time helps.</p>` },
+          { title: "Barrier protection", html: `<p>Use a thin layer of zinc oxide cream or safe barrier cream if rash starts.</p>` },
+          { title: "Correct size", html: `<p>Too tight diapers cause marks and irritation; too loose may leak and keep skin wet.</p>` },
+          { title: "When to see a doctor", html: `<p>Rash with fever, pus, spreading redness, or not improving in 2–3 days should be checked.</p>` }
+        ])
+      },
+      illness: {
+        title: "🏥 Common Illnesses & Home Care",
+        subtitle: "If baby is very young and unwell, get medical help early.",
+        content: (bg) => buildCards(bg, [
+          { title: "Fever (important)", html: `<p>For babies under 3 months, fever can be serious. If temperature is <strong>≥ 38°C</strong>, contact a doctor urgently.</p>` },
+          { title: "Stuffy nose", html: `<p>Use saline drops and gentle suction. Feed in a more upright position if needed.</p>` },
+          { title: "Colic / crying", html: `<p>Try burping, upright holding, gentle tummy massage, and calming sounds. Colic often improves by 3–4 months.</p>` },
+          { title: "Spit-up", html: `<p>Small spit-ups are common. Burp often and keep baby upright after feeding.</p>` },
+          { title: "Diarrhea / vomiting", html: `<p>Watch for dehydration: very few wet diapers, dry mouth, sunken soft spot. Seek care early.</p>` },
+          { title: "Trust your instinct", html: `<p>If baby looks weak, refuses feeds, or you are worried, visit the nearest hospital/PHC.</p>` }
+        ])
+      },
+      safety: {
+        title: "🛡️ Home Safety for Baby",
+        subtitle: "Small daily habits prevent big accidents.",
+        content: (bg) => buildCards(bg, [
+          { title: "Safe sleep", html: `<p>Back sleeping, firm surface, and no loose bedding reduces risk of suffocation.</p>` },
+          { title: "Falls prevention", html: `<p>Never leave baby alone on beds/sofas. Keep one hand on baby during changing.</p>` },
+          { title: "Choking hazards", html: `<p>Keep coins, buttons, plastic bags, and small objects away. Don’t put necklaces/threads on baby.</p>` },
+          { title: "Heat & fire", html: `<p>Keep hot tea, stoves, and heaters far. Test bath water before use.</p>` },
+          { title: "Smoke-free home", html: `<p>Keep baby away from cigarette smoke. It increases cough and breathing problems.</p>` },
+          { title: "Travel safety", html: `<p>Support head/neck always. Use a proper car seat if traveling by vehicle.</p>` }
+        ])
+      },
+      growth: {
+        title: "📈 Growth & Milestones",
+        subtitle: "Regular weighing helps catch problems early.",
+        content: (bg) => buildCards(bg, [
+          { title: "Normal weight change", html: `<p>Some weight loss in the first week is common. Babies usually regain birth weight by about 2 weeks.</p>` },
+          { title: "Feeding + wet diapers", html: `<p>A good sign is regular feeding plus wet diapers (often <strong>6+</strong> per day after day 4).</p>` },
+          { title: "Tummy time", html: `<p>Short supervised tummy time helps neck/shoulder strength. Start with a few minutes and increase slowly.</p>` },
+          { title: "Milestones (0–3 months)", html: `<p>Looking at faces, responding to sound, smiling, lifting head briefly are common early milestones.</p>` },
+          { title: "Monthly monitoring", html: `<p>Weigh baby monthly at Anganwadi/PHC and record on the growth chart card/book.</p>` },
+          { title: "When to worry", html: `<p>Poor feeding, very low urine, or not gaining weight needs doctor review.</p>` }
+        ])
+      },
+      clothing: {
+        title: "👕 Clothing & Temperature",
+        subtitle: "Comfortable clothing prevents overheating and skin irritation.",
+        content: (bg) => buildCards(bg, [
+          { title: "Simple rule", html: `<p>Dress baby in <strong>one more layer</strong> than what you are comfortable wearing.</p>` },
+          { title: "Best fabric", html: `<p>Soft cotton is best. Avoid scratchy wool directly on skin and synthetic fabrics that trap heat.</p>` },
+          { title: "Cold weather", html: `<p>Use layers, cap, socks, and mittens. Keep baby warm but avoid overheating.</p>` },
+          { title: "Hot weather", html: `<p>Use light cotton clothes. Check chest/back; remove layers if baby is sweaty.</p>` },
+          { title: "Safe clothing", html: `<p>Avoid tight necklines, strings, loose threads, and small decorative items that can detach.</p>` },
+          { title: "Wash before use", html: `<p>Wash all new clothes with mild detergent before first use; avoid strong fragrance.</p>` }
+        ])
+      }
+    };
+
+    function openBabyDetail(key) {
+      const data = babyData[key];
+      if (!data) return;
+
+      const overlay = document.getElementById('baby-detail-overlay');
+
+      // Use provided image if available; fallback to tile image
+      const clickedTile = document.querySelector(`.baby-tile[onclick="openBabyDetail('${key}')"] img`);
+      const fallbackImg = clickedTile ? clickedTile.src : '';
+      const imgSrc = topicImages[key] || fallbackImg;
+
+      document.getElementById('detail-hero').style.backgroundImage = `url(${imgSrc})`;
+      document.getElementById('detail-title').textContent = data.title;
+      document.getElementById('detail-subtitle').textContent = data.subtitle || 'Quick, clear steps with one tip per image card.';
+      document.getElementById('detail-content').innerHTML = typeof data.content === "function" ? data.content(imgSrc) : (data.content || "");
+
+      overlay.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // Stop background scrolling
+    }
+
+    function closeBabyDetail() {
+      document.getElementById('baby-detail-overlay').classList.add('hidden');
+      document.body.style.overflow = ''; // Restore background scrolling
+    }
+
+    // Geolocation API (Cleaned and enhanced)
+    function detectLocation() {
+      const display = document.getElementById('pickup-display');
+      const status = document.getElementById('loc-status');
+      display.value = 'Detecting...';
+      status.classList.remove('hidden');
+      status.textContent = 'Requesting GPS access...';
+      status.className = 'text-xs mt-1 text-amber-600'; // Reset styling
+
+      if (!navigator.geolocation) {
+        display.value = 'Geolocation not supported';
+        status.textContent = 'Please enter manually';
+        status.className = 'text-xs mt-1 text-red-600';
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          // Success
+          display.value = `📍 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+          status.textContent = '✓ Live GPS location secured';
+          status.className = 'text-xs mt-1 text-green-600 font-medium';
+        },
+        (err) => {
+          // Error handling
+          display.value = 'Location unavailable';
+          status.className = 'text-xs mt-1 text-red-600';
+          if(err.code === 1) status.textContent = 'Permission denied. Please enable GPS in browser.';
+          else status.textContent = 'Signal lost. Try again or enter manually.';
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    // Attach event listener
+    document.getElementById('detect-loc-btn').addEventListener('click', detectLocation);
+
+    // Form Submissions
+    document.getElementById('appointment-form').addEventListener('submit', e => {
+      e.preventDefault();
+      document.getElementById('appt-success').classList.remove('hidden');
+      e.target.reset();
+      setTimeout(() => document.getElementById('appt-success').classList.add('hidden'), 4000);
+    });
+
+    document.getElementById('cab-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const pickup = document.getElementById('pickup-display').value;
+      if (!pickup || pickup === 'Detecting...' || pickup === 'Location unavailable') {
+        document.getElementById('loc-status').textContent = '⚠️ Please click the location button to detect GPS first';
+        document.getElementById('loc-status').className = 'text-xs mt-1 text-red-600 font-bold';
+        return;
+      }
+      document.getElementById('cab-success').classList.remove('hidden');
+      document.getElementById('cab-date').value = '';
+      setTimeout(() => document.getElementById('cab-success').classList.add('hidden'), 4000);
+    });
+  </script>
+ </body>
+</html>
